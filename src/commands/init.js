@@ -11,6 +11,7 @@ import {
 } from "../utils/fileSystem.js";
 import { promises as fs } from "fs";
 import { routingTemplate, appTemplate } from "../templates/index.js";
+import chalk from "chalk";
 
 export async function initializeProject() {
   const spinner = ora("Initializing project...").start();
@@ -43,21 +44,25 @@ export async function initializeProject() {
     if (appFile) {
       const appContent = await readFile(appFile);
       if (!appContent.includes("BrowserRouter")) {
-        console.log(`Found App file: ${appFile}`);
-        console.log("Adding BrowserRouter and routing setup...");
+        spinner.text = `Configuring routing in ${appFile}...`;
         const modifiedAppContent = appTemplate(appContent, fileExtension);
         await writeFile(appFile, modifiedAppContent);
+        spinner.text = "Routing configuration complete";
       } else {
-        console.log("BrowserRouter already configured in App file");
+        spinner.text = "BrowserRouter already configured";
       }
     } else {
-      console.log("No App file found in src directory");
-    }
-
-    // Install dependencies
+      spinner.warn(
+        "No App file found - you may need to manually configure routing"
+      );
+    } // Install dependencies
     await installDependencies(spinner);
 
-    spinner.succeed("Project initialized successfully!");
+    spinner.succeed(
+      ` Project initialized successfully! \n Run ${chalk.green(
+        "fbr watch"
+      )} to start monitoring file changes.`
+    );
   } catch (error) {
     spinner.fail("Failed to initialize project");
     console.error(error);
@@ -76,8 +81,13 @@ async function installDependencies(spinner) {
           else resolve();
         });
       });
+      spinner.text = "Dependencies installed";
+    } else {
+      spinner.text = "react-router-dom already installed";
     }
   } catch (error) {
-    console.error("Error installing dependencies:", error);
+    spinner.warn(
+      "Could not install dependencies automatically. Please run 'npm install react-router-dom' manually."
+    );
   }
 }

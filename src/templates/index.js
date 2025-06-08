@@ -1,7 +1,34 @@
-export const componentTemplate = (
-  componentName,
-  routePath = "/"
-) => `// Route: ${routePath}
+export const componentTemplate = (componentName, routePath = "/") => {
+  // Check if this is a dynamic route (contains :param)
+  const isDynamicRoute = routePath.includes(":");
+
+  if (isDynamicRoute) {
+    // Extract parameter names from the route
+    const params = routePath.match(/:([^/]+)/g) || [];
+    const paramNames = params.map((param) => param.slice(1)); // Remove the ':'
+
+    return `// Route: ${routePath}
+import { useParams } from 'react-router-dom';
+
+export default function ${componentName}() {
+  const params = useParams();
+  ${paramNames.map((param) => `const ${param} = params.${param};`).join("\n  ")}
+
+  return (
+    <div>
+      <h1>${componentName} Page</h1>
+      <div>
+        <h2>Route Parameters:</h2>
+        ${paramNames
+          .map((param) => `<p><strong>${param}:</strong> {${param}}</p>`)
+          .join("\n        ")}
+      </div>
+    </div>
+  );
+}
+`;
+  } else {
+    return `// Route: ${routePath}
 export default function ${componentName}() {
   return (
     <div>
@@ -10,6 +37,8 @@ export default function ${componentName}() {
   );
 }
 `;
+  }
+};
 
 export const routingTemplate = `import { Routes, Route } from 'react-router-dom';
 
