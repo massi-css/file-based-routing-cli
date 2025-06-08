@@ -100,7 +100,3 @@ export default function About() {
 ## License
 
 MIT
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
