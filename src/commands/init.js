@@ -27,15 +27,20 @@ export async function initializeProject() {
     const routingPath = pagesPath.startsWith("src/")
       ? "src/routing.jsx"
       : "routing.jsx";
-    await writeFile(routingPath, routingTemplate);
-
-    // Modify App.jsx/tsx
+    await writeFile(routingPath, routingTemplate); // Modify App.jsx/tsx
     const appFile = await findFile(["src/App.jsx", "src/App.tsx"]);
     if (appFile) {
       const appContent = await readFile(appFile);
       if (!appContent.includes("BrowserRouter")) {
-        await writeFile(appFile, appTemplate(appContent));
+        console.log(`Found App file: ${appFile}`);
+        console.log("Adding BrowserRouter and routing setup...");
+        const modifiedAppContent = appTemplate(appContent);
+        await writeFile(appFile, modifiedAppContent);
+      } else {
+        console.log("BrowserRouter already configured in App file");
       }
+    } else {
+      console.log("No App.jsx or App.tsx file found in src directory");
     }
 
     // Install dependencies

@@ -1,5 +1,5 @@
 import { promises as fs } from "fs";
-import { parse, relative } from "path";
+import { parse, relative, normalize, sep } from "path";
 
 export async function checkDirectoryExists(path) {
   try {
@@ -32,10 +32,32 @@ export async function findFile(files) {
   return null;
 }
 
-export function parsePagePath(path) {
-  const { name, ext } = parse(path);
-  const relativePath = relative("pages", path).replace(ext, "");
+export function parsePagePath(filePath) {
+  const { name, ext } = parse(filePath);
+
+  // Normalize the path to handle Windows/Unix differences
+  const normalizedPath = normalize(filePath).replace(/\\/g, "/");
+
+  // Determine the base directory and extract relative path
+  let relativePath;
+  if (normalizedPath.includes("src/pages/")) {
+    const pagesIndex = normalizedPath.indexOf("src/pages/");
+    relativePath = normalizedPath.substring(pagesIndex + "src/pages/".length);
+  } else if (normalizedPath.includes("pages/")) {
+    const pagesIndex = normalizedPath.indexOf("pages/");
+    relativePath = normalizedPath.substring(pagesIndex + "pages/".length);
+  } else {
+    relativePath = name;
+  }
+
+  // Remove the file extension from the relative path
+  relativePath = relativePath.replace(ext, "");
+
+  // Generate the route path
   const route = "/" + (name === "index" ? "" : relativePath);
+
+  // Generate component name (capitalize first letter)
   const component = name.charAt(0).toUpperCase() + name.slice(1);
+
   return { name, ext, relativePath, route, component };
 }
