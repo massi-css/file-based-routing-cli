@@ -96,8 +96,8 @@ async function handleFileAdd(
   if (!isReactFile(path)) {
     return;
   }
-
-  const { name, ext, relativePath, route, component } = parsePagePath(path);
+  const { name, ext, relativePath, route, component, importPath } =
+    parsePagePath(path);
 
   try {
     console.log(chalk.cyan(`Processing file: ${path}`));
@@ -108,7 +108,12 @@ async function handleFileAdd(
       await writeFile(path, componentTemplate(component, route));
     }
 
-    pages.push({ file: relativePath + ext, component, route });
+    pages.push({
+      file: relativePath + ext,
+      component,
+      route,
+      importPath: relativePath, // Use relativePath without extension for imports
+    });
     console.log(chalk.cyan(`Updating routing file: ${routingPath}`));
     await updateRouting(pages, routingPath, pagesPath);
     console.log(chalk.green(`Added route: ${route} -> ${component}`));

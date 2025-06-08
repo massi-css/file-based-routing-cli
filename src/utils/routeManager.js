@@ -16,10 +16,16 @@ function generateRoutingContent(pages, routingPath, pagesDir) {
   return `import { Routes, Route } from 'react-router-dom';
 ${pages
   .map((page) => {
-    // Clean up the file path for import and remove extension
-    const cleanPath = page.file.replace(/\\/g, "/");
-    const importPath = cleanPath.replace(/\.(jsx?|tsx?)$/, ""); // Remove .js, .jsx, .ts, .tsx extensions
-    return `import ${page.component} from '${pagesImportPath}/${importPath}';`;
+    // Use the importPath which handles bracket notation
+    const importPath =
+      page.importPath || page.file.replace(/\.(jsx?|tsx?)$/, "");
+    const cleanImportPath = importPath.replace(/\\/g, "/");
+
+    // For paths with brackets, we need to wrap the entire import path in quotes
+    // But since ES6 imports always need quotes anyway, we just ensure proper escaping
+    const finalImportPath = `${pagesImportPath}/${cleanImportPath}`;
+
+    return `import ${page.component} from '${finalImportPath}';`;
   })
   .join("\n")}
 
