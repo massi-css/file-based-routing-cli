@@ -1,13 +1,23 @@
 import { watch } from "chokidar";
 import chalk from "chalk";
-import { writeFile, parsePagePath } from "../utils/fileSystem.js";
+import {
+  writeFile,
+  parsePagePath,
+  checkDirectoryExists,
+} from "../utils/fileSystem.js";
 import { updateRouting } from "../utils/routeManager.js";
 import { componentTemplate } from "../templates/index.js";
 
 export async function watchPages() {
   const pages = [];
-  const watcher = watch("pages/**/*.{jsx,tsx}");
-  console.log(chalk.blue("Watching for file changes in pages directory..."));
+  // Determine which pages directory exists
+  const pagesPath = (await checkDirectoryExists("src/pages"))
+    ? "src/pages"
+    : "pages";
+  const watcher = watch(`${pagesPath}/**/*.{jsx,tsx}`);
+  console.log(
+    chalk.blue(`Watching for file changes in ${pagesPath} directory...`)
+  );
 
   watcher
     .on("add", async (path) => {

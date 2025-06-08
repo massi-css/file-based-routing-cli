@@ -4,15 +4,30 @@ import {
   writeFile,
   findFile,
   readFile,
+  checkDirectoryExists,
 } from "../utils/fileSystem.js";
+import { promises as fs } from "fs";
 import { routingTemplate, appTemplate } from "../templates/index.js";
 
 export async function initializeProject() {
   const spinner = ora("Initializing project...").start();
   try {
-    // Create pages directory and routing file
-    await ensureDirectory("pages");
-    await writeFile("src/routing.jsx", routingTemplate);
+    // Check if src directory exists
+    let pagesPath = "src/pages";
+    try {
+      await fs.access("src");
+      await ensureDirectory(pagesPath);
+    } catch {
+      // If src doesn't exist, create pages in root
+      pagesPath = "pages";
+      await ensureDirectory(pagesPath);
+    }
+
+    // Create routing file in the appropriate location
+    const routingPath = pagesPath.startsWith("src/")
+      ? "src/routing.jsx"
+      : "routing.jsx";
+    await writeFile(routingPath, routingTemplate);
 
     // Modify App.jsx/tsx
     const appFile = await findFile(["src/App.jsx", "src/App.tsx"]);

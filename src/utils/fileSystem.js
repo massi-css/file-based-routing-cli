@@ -1,6 +1,15 @@
 import { promises as fs } from "fs";
 import { parse, relative } from "path";
 
+export async function checkDirectoryExists(path) {
+  try {
+    await fs.access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export async function ensureDirectory(path) {
   await fs.mkdir(path, { recursive: true });
 }
