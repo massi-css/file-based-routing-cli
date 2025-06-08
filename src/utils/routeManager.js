@@ -13,13 +13,13 @@ function generateRoutingContent(pages, routingPath, pagesDir) {
   const pagesImportPath = relativePagesPath.startsWith(".")
     ? relativePagesPath
     : `./${relativePagesPath}`;
-
   return `import { Routes, Route } from 'react-router-dom';
 ${pages
   .map((page) => {
-    // Clean up the file path for import
+    // Clean up the file path for import and remove extension
     const cleanPath = page.file.replace(/\\/g, "/");
-    return `import ${page.component} from '${pagesImportPath}/${cleanPath}';`;
+    const importPath = cleanPath.replace(/\.(jsx?|tsx?)$/, ""); // Remove .js, .jsx, .ts, .tsx extensions
+    return `import ${page.component} from '${pagesImportPath}/${importPath}';`;
   })
   .join("\n")}
 

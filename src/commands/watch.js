@@ -5,6 +5,9 @@ import {
   writeFile,
   parsePagePath,
   checkDirectoryExists,
+  detectProjectType,
+  getFileExtension,
+  isReactFile,
 } from "../utils/fileSystem.js";
 import { updateRouting } from "../utils/routeManager.js";
 import { componentTemplate } from "../templates/index.js";
@@ -15,6 +18,18 @@ export async function watchPages() {
   // Debug: Check current directory
   console.log(chalk.gray(`Current working directory: ${process.cwd()}`));
 
+  // Detect project type for dynamic file extensions
+  const { isTypeScript, useJSX } = await detectProjectType();
+  const fileExtension = getFileExtension(isTypeScript, useJSX);
+
+  console.log(
+    chalk.gray(
+      `Detected ${
+        isTypeScript ? "TypeScript" : "JavaScript"
+      } project with ${fileExtension} files`
+    )
+  );
+
   // Determine which pages directory exists
   const srcPagesExists = await checkDirectoryExists("src/pages");
   const rootPagesExists = await checkDirectoryExists("pages");
@@ -24,8 +39,8 @@ export async function watchPages() {
 
   const pagesPath = srcPagesExists ? "src/pages" : "pages";
   const routingPath = pagesPath.startsWith("src/")
-    ? "src/routing.jsx"
-    : "routing.jsx";
+    ? `src/routing${fileExtension}`
+    : `routing${fileExtension}`;
 
   console.log(
     chalk.blue(`Watching for file changes in ${pagesPath} directory...`)
@@ -43,11 +58,17 @@ export async function watchPages() {
   watcher
     .on("add", async (path) => {
       console.log(chalk.yellow(`File added: ${path}`));
-      await handleFileAdd(path, pages, routingPath, pagesPath);
+      await handleFileAdd(path, pages, routingPath, pagesPath, fileExtension);
     })
     .on("unlink", async (path) => {
       console.log(chalk.yellow(`File removed: ${path}`));
-      await handleFileRemove(path, pages, routingPath, pagesPath);
+      await handleFileRemove(
+        path,
+        pages,
+        routingPath,
+        pagesPath,
+        fileExtension
+      );
     })
     .on("error", (error) => {
       console.error(chalk.red(`Watcher error: ${error}`));
@@ -64,9 +85,15 @@ export async function watchPages() {
   });
 }
 
-async function handleFileAdd(path, pages, routingPath, pagesPath) {
-  // Only process .jsx and .tsx files
-  if (!path.endsWith(".jsx") && !path.endsWith(".tsx")) {
+async function handleFileAdd(
+  path,
+  pages,
+  routingPath,
+  pagesPath,
+  fileExtension
+) {
+  // Only process React files (.jsx, .tsx, .js, .ts)
+  if (!isReactFile(path)) {
     return;
   }
 
@@ -75,11 +102,10 @@ async function handleFileAdd(path, pages, routingPath, pagesPath) {
   try {
     console.log(chalk.cyan(`Processing file: ${path}`));
     console.log(chalk.cyan(`Component: ${component}, Route: ${route}`));
-
     const stats = await fs.stat(path);
     if (stats.size === 0) {
       console.log(chalk.cyan(`File is empty, creating component template...`));
-      await writeFile(path, componentTemplate(component));
+      await writeFile(path, componentTemplate(component, route));
     }
 
     pages.push({ file: relativePath + ext, component, route });
@@ -91,9 +117,15 @@ async function handleFileAdd(path, pages, routingPath, pagesPath) {
   }
 }
 
-async function handleFileRemove(path, pages, routingPath, pagesPath) {
-  // Only process .jsx and .tsx files
-  if (!path.endsWith(".jsx") && !path.endsWith(".tsx")) {
+async function handleFileRemove(
+  path,
+  pages,
+  routingPath,
+  pagesPath,
+  fileExtension
+) {
+  // Only process React files (.jsx, .tsx, .js, .ts)
+  if (!isReactFile(path)) {
     return;
   }
 

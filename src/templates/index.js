@@ -1,6 +1,8 @@
 export const componentTemplate = (
-  componentName
-) => `export default function ${componentName}() {
+  componentName,
+  routePath = "/"
+) => `// Route: ${routePath}
+export default function ${componentName}() {
   return (
     <div>
       <h1>${componentName} Page</h1>
@@ -21,10 +23,13 @@ export default function AppRoutes() {
 }
 `;
 
-export const appTemplate = (existingContent) => {
+export const appTemplate = (existingContent, fileExtension = ".jsx") => {
+  // Determine routing import based on file extension
+  const routingImport = `./routing${fileExtension}`;
+
   // Add imports at the top
   const imports = `import { BrowserRouter } from 'react-router-dom';
-import AppRoutes from './routing';
+import AppRoutes from '${routingImport}';
 `;
 
   let modifiedContent = existingContent;

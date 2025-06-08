@@ -5,6 +5,9 @@ import {
   findFile,
   readFile,
   checkDirectoryExists,
+  detectProjectType,
+  getFileExtension,
+  findAppFile,
 } from "../utils/fileSystem.js";
 import { promises as fs } from "fs";
 import { routingTemplate, appTemplate } from "../templates/index.js";
@@ -12,6 +15,14 @@ import { routingTemplate, appTemplate } from "../templates/index.js";
 export async function initializeProject() {
   const spinner = ora("Initializing project...").start();
   try {
+    // Detect project type (TypeScript vs JavaScript)
+    const { isTypeScript, useJSX } = await detectProjectType();
+    const fileExtension = getFileExtension(isTypeScript, useJSX);
+
+    spinner.text = `Detected ${
+      isTypeScript ? "TypeScript" : "JavaScript"
+    } project with ${fileExtension} files`;
+
     // Check if src directory exists
     let pagesPath = "src/pages";
     try {
@@ -23,24 +34,24 @@ export async function initializeProject() {
       await ensureDirectory(pagesPath);
     }
 
-    // Create routing file in the appropriate location
+    // Create routing file with appropriate extension
     const routingPath = pagesPath.startsWith("src/")
-      ? "src/routing.jsx"
-      : "routing.jsx";
-    await writeFile(routingPath, routingTemplate); // Modify App.jsx/tsx
-    const appFile = await findFile(["src/App.jsx", "src/App.tsx"]);
+      ? `src/routing${fileExtension}`
+      : `routing${fileExtension}`;
+    await writeFile(routingPath, routingTemplate); // Modify App file
+    const appFile = await findAppFile();
     if (appFile) {
       const appContent = await readFile(appFile);
       if (!appContent.includes("BrowserRouter")) {
         console.log(`Found App file: ${appFile}`);
         console.log("Adding BrowserRouter and routing setup...");
-        const modifiedAppContent = appTemplate(appContent);
+        const modifiedAppContent = appTemplate(appContent, fileExtension);
         await writeFile(appFile, modifiedAppContent);
       } else {
         console.log("BrowserRouter already configured in App file");
       }
     } else {
-      console.log("No App.jsx or App.tsx file found in src directory");
+      console.log("No App file found in src directory");
     }
 
     // Install dependencies
