@@ -49,24 +49,24 @@ export function parsePagePath(filePath) {
   } else {
     relativePath = name;
   }
-
-  // Remove the file extension from the relative path
   relativePath = relativePath.replace(ext, "");
-
-  // Generate the route path with dynamic route handling
   let route;
   if (name === "index") {
-    // Handle index files - they map to the parent directory
     const pathParts = relativePath.split("/");
     pathParts.pop(); // Remove the "index" part
-    route = "/" + pathParts.join("/");
+    const routeParts = pathParts.filter((part) => !part.match(/^\(.+\)$/));
+    route = "/" + routeParts.join("/");
+    if (route === "/") {
+      route = "/";
+    } else if (route === "//") {
+      route = "/";
+    }
   } else {
-    // Convert bracket notation [id] to :id for React Router
     const routePath = relativePath
       .split("/")
+      .filter((segment) => !segment.match(/^\(.+\)$/)) 
       .map((segment) => {
         if (segment.match(/^\[.+\]$/)) {
-          // Convert [id] to :id, [slug] to :slug, etc.
           return segment.replace(/^\[(.+)\]$/, ":$1");
         }
         return segment;
@@ -74,24 +74,17 @@ export function parsePagePath(filePath) {
       .join("/");
     route = "/" + routePath;
   }
-  // Generate component name (handle bracket notation for imports)
   let component;
 
-  // Create a unique component name based on the full relative path
   const pathParts = relativePath.split("/");
   if (name.match(/^\[.+\]$/)) {
-    // For dynamic routes like [id].jsx or categories/[id].jsx
-    // Include parent directory names to make it unique
     const paramName = name.replace(/^\[(.+)\]$/, "$1");
-    const parentParts = pathParts.slice(0, -1); // All parts except the file name
-
+    const parentParts = pathParts.slice(0, -1); 
     if (parentParts.length > 0) {
-      // e.g., "categories/[id]" becomes "CategoriesDynamicId"
-      // Remove brackets from parent parts for component naming
       const parentName = parentParts
         .map((part) => {
-          // Remove brackets from directory names
-          const cleanPart = part.replace(/^\[(.+)\]$/, "$1");
+          let cleanPart = part.replace(/^\[(.+)\]$/, "$1");
+          cleanPart = cleanPart.replace(/^\((.+)\)$/, "$1");
           return cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1);
         })
         .join("");
@@ -112,8 +105,10 @@ export function parsePagePath(filePath) {
       component =
         parentParts
           .map((part) => {
-            // Remove brackets from directory names
-            const cleanPart = part.replace(/^\[(.+)\]$/, "$1");
+            // Remove brackets from directory names like [id]
+            let cleanPart = part.replace(/^\[(.+)\]$/, "$1");
+            // Remove parentheses from route groups like (auth)
+            cleanPart = cleanPart.replace(/^\((.+)\)$/, "$1");
             return cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1);
           })
           .join("") + "Index";
@@ -126,8 +121,10 @@ export function parsePagePath(filePath) {
     if (parentParts.length > 0) {
       const parentName = parentParts
         .map((part) => {
-          // Remove brackets from directory names
-          const cleanPart = part.replace(/^\[(.+)\]$/, "$1");
+          // Remove brackets from directory names like [id]
+          let cleanPart = part.replace(/^\[(.+)\]$/, "$1");
+          // Remove parentheses from route groups like (auth)
+          cleanPart = cleanPart.replace(/^\((.+)\)$/, "$1");
           return cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1);
         })
         .join("");
