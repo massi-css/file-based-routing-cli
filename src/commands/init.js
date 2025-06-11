@@ -2,9 +2,7 @@ import ora from "ora";
 import {
   ensureDirectory,
   writeFile,
-  findFile,
   readFile,
-  checkDirectoryExists,
   detectProjectType,
   getFileExtension,
   findAppFile,
@@ -39,7 +37,8 @@ export async function initializeProject() {
     const routingPath = pagesPath.startsWith("src/")
       ? `src/routing${fileExtension}`
       : `routing${fileExtension}`;
-    await writeFile(routingPath, routingTemplate); // Modify App file
+    // Modify App file
+    await writeFile(routingPath, routingTemplate);
     const appFile = await findAppFile();
     if (appFile) {
       const appContent = await readFile(appFile);
@@ -55,7 +54,8 @@ export async function initializeProject() {
       spinner.warn(
         "No App file found - you may need to manually configure routing"
       );
-    } // Install dependencies
+    } 
+    // Install dependencies
     await installDependencies(spinner);
 
     spinner.succeed(

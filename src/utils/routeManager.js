@@ -7,7 +7,6 @@ export async function updateRouting(pages, routingPath, pagesDir) {
 }
 
 function generateRoutingContent(pages, routingPath, pagesDir) {
-  // Calculate relative path from routing file to pages directory
   const routingDir = dirname(routingPath);
   const relativePagesPath = relative(routingDir, pagesDir).replace(/\\/g, "/");
   const pagesImportPath = relativePagesPath.startsWith(".")

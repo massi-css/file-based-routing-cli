@@ -5,7 +5,7 @@ export const componentTemplate = (componentName, routePath = "/") => {
   if (isDynamicRoute) {
     // Extract parameter names from the route
     const params = routePath.match(/:([^/]+)/g) || [];
-    const paramNames = params.map((param) => param.slice(1)); // Remove the ':'
+    const paramNames = params.map((param) => param.slice(1)); 
 
     return `// Route: ${routePath}
 import { useParams } from 'react-router-dom';

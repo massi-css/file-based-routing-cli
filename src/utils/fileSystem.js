@@ -35,10 +35,8 @@ export async function findFile(files) {
 export function parsePagePath(filePath) {
   const { name, ext } = parse(filePath);
 
-  // Normalize the path to handle Windows/Unix differences
   const normalizedPath = normalize(filePath).replace(/\\/g, "/");
 
-  // Determine the base directory and extract relative path
   let relativePath;
   if (normalizedPath.includes("src/pages/")) {
     const pagesIndex = normalizedPath.indexOf("src/pages/");
@@ -53,7 +51,7 @@ export function parsePagePath(filePath) {
   let route;
   if (name === "index") {
     const pathParts = relativePath.split("/");
-    pathParts.pop(); // Remove the "index" part
+    pathParts.pop();
     const routeParts = pathParts.filter((part) => !part.match(/^\(.+\)$/));
     route = "/" + routeParts.join("/");
     if (route === "/") {
@@ -64,7 +62,7 @@ export function parsePagePath(filePath) {
   } else {
     const routePath = relativePath
       .split("/")
-      .filter((segment) => !segment.match(/^\(.+\)$/)) 
+      .filter((segment) => !segment.match(/^\(.+\)$/))
       .map((segment) => {
         if (segment.match(/^\[.+\]$/)) {
           return segment.replace(/^\[(.+)\]$/, ":$1");
@@ -79,7 +77,7 @@ export function parsePagePath(filePath) {
   const pathParts = relativePath.split("/");
   if (name.match(/^\[.+\]$/)) {
     const paramName = name.replace(/^\[(.+)\]$/, "$1");
-    const parentParts = pathParts.slice(0, -1); 
+    const parentParts = pathParts.slice(0, -1);
     if (parentParts.length > 0) {
       const parentName = parentParts
         .map((part) => {
@@ -94,36 +92,29 @@ export function parsePagePath(filePath) {
         paramName.charAt(0).toUpperCase() +
         paramName.slice(1);
     } else {
-      // e.g., "[id]" becomes "DynamicId"
       component =
         "Dynamic" + paramName.charAt(0).toUpperCase() + paramName.slice(1);
     }
   } else if (name === "index") {
-    // For index files, use the parent directory name
-    const parentParts = pathParts.slice(0, -1); // All parts except "index"
+    const parentParts = pathParts.slice(0, -1);
     if (parentParts.length > 0) {
       component =
         parentParts
           .map((part) => {
-            // Remove brackets from directory names like [id]
             let cleanPart = part.replace(/^\[(.+)\]$/, "$1");
-            // Remove parentheses from route groups like (auth)
             cleanPart = cleanPart.replace(/^\((.+)\)$/, "$1");
             return cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1);
           })
           .join("") + "Index";
     } else {
-      component = "Home"; // Root index
+      component = "Home";
     }
   } else {
-    // For regular files, include parent path if nested
     const parentParts = pathParts.slice(0, -1);
     if (parentParts.length > 0) {
       const parentName = parentParts
         .map((part) => {
-          // Remove brackets from directory names like [id]
           let cleanPart = part.replace(/^\[(.+)\]$/, "$1");
-          // Remove parentheses from route groups like (auth)
           cleanPart = cleanPart.replace(/^\((.+)\)$/, "$1");
           return cleanPart.charAt(0).toUpperCase() + cleanPart.slice(1);
         })
@@ -134,7 +125,6 @@ export function parsePagePath(filePath) {
     }
   }
 
-  // Create import-safe file path (for the actual file import)
   const importPath = relativePath;
 
   return { name, ext, relativePath, route, component, importPath };
@@ -142,13 +132,11 @@ export function parsePagePath(filePath) {
 
 export async function detectProjectType() {
   try {
-    // Check for TypeScript config
     try {
       await fs.access("tsconfig.json");
-      return { isTypeScript: true, useJSX: true }; // Assume JSX for React projects
+      return { isTypeScript: true, useJSX: true };
     } catch {}
 
-    // Check package.json for TypeScript dependency
     try {
       const packageJson = JSON.parse(await readFile("package.json"));
       const deps = {
@@ -159,7 +147,6 @@ export async function detectProjectType() {
       return { isTypeScript: !!isTypeScript, useJSX: true };
     } catch {}
 
-    // Default to JavaScript with JSX
     return { isTypeScript: false, useJSX: true };
   } catch {
     return { isTypeScript: false, useJSX: true };
